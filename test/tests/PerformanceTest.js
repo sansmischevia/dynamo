@@ -47,7 +47,7 @@ function putOne(i, ee) {
   };
   OBJECTS.push(obj);
 
-  db.put(TABLE_NAME, obj).save(function(err, result) {
+  db.put(TABLE_NAME, obj).retryCount(3).save(function(err, result) {
     if (err) {
       console.warn('put error: ' + i + ' : %j', err);
       ee.emit('error', err);
@@ -142,7 +142,7 @@ describe("Performance", function() {
   });
 
   describe("test", function() {
-    var ITEMS = 20;
+    var ITEMS = 200;
     it('adds ' + ITEMS + ' items to the table', function(done) {
       // Create X clients to add Y items into the table
       putItems(ITEMS, function(err) {
