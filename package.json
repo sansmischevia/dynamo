@@ -27,7 +27,8 @@
   },
   "devDependencies": {
     "mocha": "*",
-    "should": "*"
+    "should": "*",
+    "node-uuid": "1.4.0"
   },
   "dependencies": {},
   "optionalDependencies": {}

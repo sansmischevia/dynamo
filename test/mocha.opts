@@ -1,2 +1,3 @@
 --bail
---timeout 100s
+--timeout 50s
+--reporter list

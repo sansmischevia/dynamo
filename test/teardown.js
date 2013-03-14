@@ -12,7 +12,7 @@ describe("teardown -", function() {
         })
       })
     })
-  })
+  });
 
   it("make sure no test tables exist", function(done) {
     db.get("DYNAMO_TEST_TABLE_1").watch(function() {
@@ -22,5 +22,5 @@ describe("teardown -", function() {
         })
       })
     })
-  })
+  });
 })
