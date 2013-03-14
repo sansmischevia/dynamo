@@ -49,21 +49,37 @@ function putOne(i, ee) {
 
   db.put(TABLE_NAME, obj).save(function(err, result) {
     if (err) {
-      console.warn('put error: %j', err);
+      console.warn('put error: ' + i + ' : %j', err);
+      ee.emit('error', err);
+      return;
     }
 
     ee.emit('done', result);
   });
 }
 
-function putItems(times, cb) {
-  var countEventEmitter = new events.EventEmitter();
-  var completedPuts = 0;
-  var st = setTimeout(function() {
-    cb(new Error('put did not complete ' + completedPuts + "/" + times), completedPuts);
-  }, Math.ceil(times / WRITE_CAPACITY * 1200) + 30 * 1000);
+function getItem(id, ee) { 
+  db.get(TABLE_NAME, { id: id }).fetch(function(err, item) {
+    if (err) {
+      console.warn('get error: %j', err);
+      ee.emit('error', err);
+      return;
+    }
 
-  countEventEmitter.on('done', function(result) {
+    ee.emit('done', item);
+  });
+}
+
+function putItems(times, cb) {
+  var ee = new events.EventEmitter();
+  var completedPuts = 0;
+  var errors = 0;
+  var st = setTimeout(function() {
+    cb(new Error('put did not complete ' + completedPuts + "/" + times +
+      '. Error Rate: ' + errors / times), completedPuts);
+  }, Math.ceil(times / WRITE_CAPACITY * 1200) + 3 * 1000);
+
+  ee.on('done', function(result) {
     completedPuts++;
     if (completedPuts === times) {
       clearTimeout(st);
@@ -71,17 +87,23 @@ function putItems(times, cb) {
     }
   });
 
+  ee.on('error', function(error) {
+    errors++;
+  });
+
   for (var i = 0; i < times; i++) {
-    putOne(i, countEventEmitter);
+    putOne(i, ee);
   }
 }
 
 function getObjects(objs, cb) {
   var ee = new events.EventEmitter();
   var completedGets = 0;
+  var errors = 0;
   var st = setTimeout(function() {
-    cb(new Error('get did not complete ' + completedGets + "/" + objs.length), completedGets);
-  }, Math.ceil(objs.length / WRITE_CAPACITY * 1200) + 30 * 1000);
+    cb(new Error('get did not complete ' + completedGets + "/" + objs.length + 
+      '. Error Rate: ' + errors / objs.length), completedGets);
+  }, Math.ceil(objs.length / WRITE_CAPACITY * 1200) + 3 * 1000);
   
   var results = [];
   ee.on('done', function(result) {
@@ -93,19 +115,13 @@ function getObjects(objs, cb) {
     }
   });
 
+  ee.on('error', function(error) {
+    errors++;
+  });
+
   for (var o in objs) {
     getItem(objs[o].id, ee);
   }
-}
-
-function getItem(id, ee) { 
-  db.get(TABLE_NAME, { id: id }).fetch(function(err, item) {
-    if (err) {
-      console.warn('get error: %j', err);
-    }
-
-    ee.emit('done', item);
-  });
 }
 
 describe("Performance", function() {
@@ -125,8 +141,8 @@ describe("Performance", function() {
     });
   });
 
-  describe("test1", function() {
-    var ITEMS = 50;
+  describe("test", function() {
+    var ITEMS = 20;
     it('adds ' + ITEMS + ' items to the table', function(done) {
       // Create X clients to add Y items into the table
       putItems(ITEMS, function(err) {
