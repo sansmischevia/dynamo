@@ -51,7 +51,7 @@ function putOne(i, ee) {
     if (err) {
       console.warn('put error: %j', err);
     }
-    console.log('added: %s', obj.id);
+
     ee.emit('done', result);
   });
 }
@@ -61,7 +61,7 @@ function putItems(times, cb) {
   var completedPuts = 0;
   var st = setTimeout(function() {
     cb(new Error('put did not complete ' + completedPuts + "/" + times), completedPuts);
-  }, Math.ceil(times / WRITE_CAPACITY * 1000) + 3000);
+  }, Math.ceil(times / WRITE_CAPACITY * 1200) + 30 * 1000);
 
   countEventEmitter.on('done', function(result) {
     completedPuts++;
@@ -81,7 +81,7 @@ function getObjects(objs, cb) {
   var completedGets = 0;
   var st = setTimeout(function() {
     cb(new Error('get did not complete ' + completedGets + "/" + objs.length), completedGets);
-  }, Math.ceil(objs.length / WRITE_CAPACITY * 1000) + 3000);
+  }, Math.ceil(objs.length / WRITE_CAPACITY * 1200) + 30 * 1000);
   
   var results = [];
   ee.on('done', function(result) {
@@ -103,7 +103,7 @@ function getItem(id, ee) {
     if (err) {
       console.warn('get error: %j', err);
     }
-    console.log('getItem: %j', item);
+
     ee.emit('done', item);
   });
 }
@@ -125,8 +125,8 @@ describe("Performance", function() {
     });
   });
 
-  describe("Verifies the test table is present", function() {
-    var ITEMS = 300;
+  describe("test1", function() {
+    var ITEMS = 50;
     it('adds ' + ITEMS + ' items to the table', function(done) {
       // Create X clients to add Y items into the table
       putItems(ITEMS, function(err) {
