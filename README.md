@@ -1,11 +1,11 @@
-# This library has been deprecated.
+# This library has been reincarnated!
 
-Please use [Amazon's SDK for node.js](http://aws.amazon.com/sdkfornodejs/) instead.
+Don't use [Amazon's SDK for node.js](http://aws.amazon.com/sdkfornodejs/). It performs horribly as it creates a new Session for every request and it also uses connection pooling, which will slow down your client.
 
 dynamo
 ------
 
-[![Build Status](https://secure.travis-ci.org/jed/dynamo.png)][travis]
+[![Build Status](https://secure.travis-ci.org/sansmischevia/dynamo.png)][travis]
 
 This is a [node.js][node] binding for the [DynamoDB][dynamo] service provided by [Amazon Web Services][aws]. It aims to abstract DynamoDB's implementation (request signing, session tokens, pagination), but not its tradeoffs/philosophy, by providing two APIs:
 
