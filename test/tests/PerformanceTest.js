@@ -12,6 +12,11 @@ var OBJECTS = [];
 var WRITE_CAPACITY = 20;
 var READ_CAPACITY = 20;
 
+var throughputEe = new events.EventEmitter();
+throughputEe.on('error', function(err) {
+  console.warn('error: %j', err);
+});
+
 function createTestTable(cb) {
   db.add({
       name: TABLE_NAME,
@@ -76,6 +81,7 @@ function updateItem(id, ee) {
     .update(function() {
       this.put("junk", "HELLO MY NAME IS");
     })
+    .retryCount(3)
     .save(function(err, result) {
       if (err) {
         console.warn('update error: ' + id + ' %j', err);
