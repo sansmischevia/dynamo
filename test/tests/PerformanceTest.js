@@ -70,6 +70,22 @@ function getItem(id, ee) {
   });
 }
 
+function updateItem(id, ee) {
+  db.get(TABLE_NAME)
+    .get({id: id})
+    .update(function() {
+      this.put("junk", "HELLO MY NAME IS");
+    })
+    .save(function(err, result) {
+      if (err) {
+        console.warn('update error: ' + id + ' %j', err);
+        ee.emit('error', err);
+        return;
+      }
+      ee.emit('done', result);
+    });
+}
+
 function putItems(times, cb) {
   var ee = new events.EventEmitter();
   var completedPuts = 0;
@@ -124,6 +140,33 @@ function getObjects(objs, cb) {
   }
 }
 
+function updateItems(objs, cb) {
+  var ee = new events.EventEmitter();
+  var compUpdates = 0;
+  var errors = 0;
+  var st = setTimeout(function() {
+    cb(new Error('update did not complete ' + compUpdates + "/" + objs.length + 
+      '. Error Rate: ' + errors / objs.length), compUpdates);
+  }, Math.ceil(objs.length / WRITE_CAPACITY * 1200) + 3 * 1000);
+  
+  var results = [];
+  ee.on('done', function(result) {
+    compUpdates++;
+    results.push(result.id);
+    if (compUpdates === objs.length) {
+      clearTimeout(st);
+      cb(null, results);
+    }
+  });
+
+  ee.on('error', function(error) {
+    errors++;
+  });
+  for (var o in objs) {
+    updateItem(objs[o].id, ee);
+  }
+}
+
 describe("Performance", function() {
   before(function(done) {
     db.fetch(function(err) {
@@ -142,10 +185,17 @@ describe("Performance", function() {
   });
 
   describe("test", function() {
-    var ITEMS = 200;
+    var ITEMS = 20;
     it('adds ' + ITEMS + ' items to the table', function(done) {
       // Create X clients to add Y items into the table
       putItems(ITEMS, function(err) {
+        should.not.exist(err);
+        done();
+      });
+    });
+
+    it('updates ' + ITEMS + ' items to have new attributes', function(done) {
+      updateItems(OBJECTS, function(err) {
         should.not.exist(err);
         done();
       });
